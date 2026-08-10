@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://127.0.0.1:8000";
+const DEFAULT_API_URL = "https://or8wc0p8nf.execute-api.eu-west-2.amazonaws.com";
 const DEFAULT_POINT = { lon: 126.978422, lat: 37.566742 };
 
 const elements = {

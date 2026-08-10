@@ -11,7 +11,8 @@ python3 -m http.server 3000
 Open <http://127.0.0.1:3000>.
 
 The API URL can be changed from the settings control in the page. The default
-is `http://127.0.0.1:8000`.
+is the deployed AWS API:
+`https://or8wc0p8nf.execute-api.eu-west-2.amazonaws.com`.
 
 ## Vercel deployment
 
