@@ -55,6 +55,7 @@ Accepted NPN forms:
 The web API is intentionally batch-oriented:
 
 - `GET /health`
+- `POST /convert` — single-request conversion for the web client
 - `POST /to-npn`
 - `POST /to-wgs`
 
@@ -140,7 +141,7 @@ sam build --use-container
 sam deploy --guided
 ```
 
-The deployed API exposes `/health`, `/to-npn`, and `/to-wgs`. Delete the stack
+The deployed API exposes `/health`, `/convert`, `/to-npn`, and `/to-wgs`. The web client uses `/convert` so each interaction needs one API request. Delete the stack
 when it is no longer needed with `sam delete`.
 
 ## Local development

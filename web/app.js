@@ -335,36 +335,26 @@ function clearResult({ clearInput = true } = {}) {
   if (clearInput) elements.commandInput.value = "";
 }
 
-function requireResults(payload, label) {
-  if (!payload || !Array.isArray(payload.results) || payload.results.length === 0) {
-    throw new Error(`${label} API 응답 형식이 올바르지 않습니다.`);
+function requireConversion(payload) {
+  const corner = payload?.cell_corner;
+  if (
+    typeof payload?.code !== "string" ||
+    !corner ||
+    !Number.isFinite(corner.lon) ||
+    !Number.isFinite(corner.lat)
+  ) {
+    throw new Error("변환 API 응답 형식이 올바르지 않습니다.");
   }
-  return payload.results;
+  return { code: payload.code, cellCorner: corner };
 }
 
-async function postToNpn(point, apiUrl) {
-  const payload = await requestJson("/to-npn", {
+async function postConvert(input, apiUrl) {
+  const payload = await requestJson("/convert", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ points: [point], output: "han" }),
+    body: JSON.stringify({ ...input, output: "han" }),
   }, apiUrl);
-  const results = requireResults(payload, "좌표 변환");
-  if (typeof results[0] !== "string") throw new Error("좌표 변환 API 응답 형식이 올바르지 않습니다.");
-  return results[0];
-}
-
-async function postToWgs(code, apiUrl) {
-  const payload = await requestJson("/to-wgs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ codes: [code] }),
-  }, apiUrl);
-  const results = requireResults(payload, "번호 변환");
-  const point = results[0];
-  if (!point || !Number.isFinite(point.lon) || !Number.isFinite(point.lat)) {
-    throw new Error("번호 변환 API 응답 형식이 올바르지 않습니다.");
-  }
-  return point;
+  return requireConversion(payload);
 }
 
 async function convertCoordinates(point, { moveMap = false } = {}) {
@@ -374,8 +364,7 @@ async function convertCoordinates(point, { moveMap = false } = {}) {
 
   try {
     const apiUrl = getApiUrl();
-    const code = await postToNpn(point, apiUrl);
-    const cellCorner = await postToWgs(code, apiUrl);
+    const { code, cellCorner } = await postConvert({ point }, apiUrl);
     updateResult(point, code, cellCorner);
     elements.commandInput.value = `${formatCoordinate(point.lon)}, ${formatCoordinate(point.lat)}`;
     if (moveMap) map.flyTo([point.lat, point.lon], Math.max(map.getZoom(), 15));
@@ -398,11 +387,10 @@ async function convertCode(code) {
 
   try {
     const apiUrl = getApiUrl();
-    const cellCorner = await postToWgs(code, apiUrl);
-    const canonicalCode = await postToNpn(cellCorner, apiUrl);
-    const cellCenter = offsetMeters(cellCorner, 5, 5);
-    updateResult(cellCenter, canonicalCode, cellCorner);
-    elements.commandInput.value = canonicalCode;
+    const conversion = await postConvert({ code }, apiUrl);
+    const cellCenter = offsetMeters(conversion.cellCorner, 5, 5);
+    updateResult(cellCenter, conversion.code, conversion.cellCorner);
+    elements.commandInput.value = conversion.code;
     map.flyTo([cellCenter.lat, cellCenter.lon], 17);
     setConnection("online");
   } catch (error) {

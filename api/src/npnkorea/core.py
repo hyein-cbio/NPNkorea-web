@@ -21,6 +21,22 @@ from .types import LonLat, ParsedNPN
 PointBatch = LonLat | Sequence[LonLat]
 StringBatch = str | Sequence[str]
 
+
+def convert_point(point: LonLat, output: str = "han") -> tuple[str, LonLat]:
+    """Convert one coordinate and return its code plus cell lower-left corner."""
+
+    code = to_npn(point, output=output)
+    corner = to_wgs(code)
+    return code, corner
+
+
+def convert_code(code: str, output: str = "han") -> tuple[str, LonLat]:
+    """Convert one code and return its canonical code plus cell lower-left corner."""
+
+    corner = to_wgs(code)
+    canonical_code = to_npn(corner, output=output)
+    return canonical_code, corner
+
 _HANGUL_PATTERN = re.compile(r"^([가-힣])([가-힣])(\d{4})(\d{4})$")
 _ABC_PATTERN = re.compile(
     r"^({})({})(\d{{4}})(\d{{4}})$".format(

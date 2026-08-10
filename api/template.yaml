@@ -34,6 +34,12 @@ Resources:
             ApiId: !Ref NpnApi
             Path: /health
             Method: GET
+        Convert:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NpnApi
+            Path: /convert
+            Method: POST
         ToNpn:
           Type: HttpApi
           Properties:

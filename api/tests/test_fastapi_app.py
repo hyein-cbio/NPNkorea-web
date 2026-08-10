@@ -15,6 +15,18 @@ def test_health_endpoint() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_combined_convert_endpoint_returns_code_and_corner() -> None:
+    response = client.post(
+        "/convert",
+        json={"point": {"lon": 126.978422, "lat": 37.566742}},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["code"] == "다사 5393 5205"
+    assert set(payload["cell_corner"]) == {"lon", "lat"}
+
+
 def test_to_npn_endpoint_returns_expected_json() -> None:
     response = client.post(
         "/to-npn",

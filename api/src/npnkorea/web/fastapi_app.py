@@ -3,7 +3,7 @@
 from typing import Literal
 
 from ..constants import MAX_BATCH_SIZE
-from ..core import to_npn, to_wgs
+from ..core import convert_code, convert_point, to_npn, to_wgs
 from ..exceptions import NPNKoreaError
 from ..types import LonLat
 
@@ -12,7 +12,7 @@ def create_app():
     """Create a FastAPI app if FastAPI is installed."""
 
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, HTTPException
         from fastapi.middleware.cors import CORSMiddleware
         from fastapi.responses import JSONResponse
         from pydantic import BaseModel, Field
@@ -32,6 +32,11 @@ def create_app():
     class ToWGSRequest(BaseModel):
         codes: list[str] = Field(max_length=MAX_BATCH_SIZE)
 
+    class ConvertRequest(BaseModel):
+        point: PointModel | None = None
+        code: str | None = None
+        output: Literal["han", "abc"] = "han"
+
     app = FastAPI(title="NPNkorea API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
@@ -44,6 +49,24 @@ def create_app():
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.post("/convert")
+    def convert_endpoint(body: ConvertRequest) -> dict[str, object]:
+        if (body.point is None) == (body.code is None):
+            raise HTTPException(status_code=422, detail="Exactly one of `point` or `code` is required")
+
+        if body.point is not None:
+            code, corner = convert_point(
+                LonLat(lon=body.point.lon, lat=body.point.lat),
+                output=body.output,
+            )
+        else:
+            code, corner = convert_code(body.code, output=body.output)
+
+        return {
+            "code": code,
+            "cell_corner": {"lon": corner.lon, "lat": corner.lat},
+        }
 
     @app.post("/to-npn")
     def to_npn_endpoint(body: ToNPNRequest) -> dict[str, list[str]]:

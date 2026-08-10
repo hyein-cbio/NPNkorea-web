@@ -19,7 +19,7 @@ sam build --use-container
 sam deploy --guided
 ```
 
-The API exposes `GET /health`, `POST /to-npn`, and `POST /to-wgs`.
+The API exposes `GET /health`, `POST /convert`, `POST /to-npn`, and `POST /to-wgs`. The web client uses `/convert` to complete each interaction in one request.
 
 ## Web
 

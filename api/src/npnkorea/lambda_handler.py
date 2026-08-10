@@ -8,7 +8,7 @@ import json
 from typing import Any
 
 from .constants import MAX_BATCH_SIZE
-from .core import to_npn, to_wgs
+from .core import convert_code, convert_point, to_npn, to_wgs
 from .exceptions import NPNKoreaError
 from .types import LonLat
 
@@ -54,6 +54,28 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     try:
         body = _request_body(event)
+        if path.endswith("/convert"):
+            raw_point = body.get("point")
+            raw_code = body.get("code")
+            if (raw_point is None) == (raw_code is None):
+                raise ValueError("Exactly one of `point` or `code` is required")
+
+            output = body.get("output", "han")
+            if raw_point is not None:
+                if not isinstance(raw_point, dict):
+                    raise ValueError("`point` must be a JSON object")
+                point = LonLat(lon=float(raw_point["lon"]), lat=float(raw_point["lat"]))
+                code, corner = convert_point(point, output=output)
+            else:
+                if not isinstance(raw_code, str):
+                    raise ValueError("`code` must be a string")
+                code, corner = convert_code(raw_code, output=output)
+
+            return _response(200, {
+                "code": code,
+                "cell_corner": {"lon": corner.lon, "lat": corner.lat},
+            })
+
         if path.endswith("/to-npn"):
             raw_points = body["points"]
             if not isinstance(raw_points, list):
