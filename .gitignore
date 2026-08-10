@@ -1,0 +1,22 @@
+.DS_Store
+._*
+# Pi subagent session artifacts
+.pi-subagents/
+.pytest_cache/
+
+# Python / API
+api/__pycache__/
+api/.pytest_cache/
+api/.venv/
+api/build/
+api/dist/
+api/*.egg-info/
+api/**/__pycache__/
+api/**/.pytest_cache/
+
+# Web / Vercel
+web/node_modules/
+web/.vercel/
+web/.env
+web/.env.*
+!web/.env.example

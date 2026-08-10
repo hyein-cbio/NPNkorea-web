@@ -1,0 +1,2 @@
+# Installed by `sam build --use-container` for the Lambda function.
+pyproj>=3.7,<4

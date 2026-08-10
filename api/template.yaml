@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Minimal NPNkorea coordinate conversion API
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: python3.12
+
+Resources:
+  NpnApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - content-type
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  NpnFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: npnkorea.lambda_handler.handler
+      Events:
+        Health:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NpnApi
+            Path: /health
+            Method: GET
+        ToNpn:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NpnApi
+            Path: /to-npn
+            Method: POST
+        ToWgs:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NpnApi
+            Path: /to-wgs
+            Method: POST
+
+Outputs:
+  ApiUrl:
+    Description: HTTPS endpoint
+    Value: !Sub 'https://${NpnApi}.execute-api.${AWS::Region}.amazonaws.com'

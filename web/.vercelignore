@@ -1,0 +1,9 @@
+# Keep design-review artifacts out of the Vercel deployment.
+design-qa-comparison.png
+implementation-current-location-mobile.png
+implementation-current-location.png
+implementation-mobile.png
+implementation-option-2.png
+reference-option-2.png
+design-qa-comparison.html
+README.md
