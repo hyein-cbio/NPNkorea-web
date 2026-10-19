@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from npnkorea.lambda_handler import handler
 
 
@@ -21,9 +23,14 @@ def test_health():
 def test_combined_convert_endpoint():
     response = handler(event("/convert", {"point": {"lon": 126.978422, "lat": 37.566742}}), None)
     assert response["statusCode"] == 200
+    # Cell-corner coordinates come from pyproj. Absolute 1e-9 deg (~0.1 mm)
+    # absorbs last-digit CRS noise without relaxing the 10 m NPN cell check.
     assert json.loads(response["body"]) == {
         "code": "다사 5393 5205",
-        "cell_corner": {"lon": 126.97832537074162, "lat": 37.56666295072665},
+        "cell_corner": pytest.approx(
+            {"lon": 126.97832537074162, "lat": 37.56666295072665},
+            abs=1e-9,
+        ),
     }
 
 
