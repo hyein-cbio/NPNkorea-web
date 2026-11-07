@@ -8,7 +8,7 @@ Point Numbers (NPN, 국가지점번호) and WGS84 longitude/latitude coordinates
 **Base URL:** `https://api.npnkorea.com`
 
 This is the callable production URL, served by API Gateway HTTP API and a Python
-Lambda in AWS `eu-west-2`. The [web demo](https://npnkorea.vercel.app/) is a
+Lambda in AWS `eu-west-2`. The [web demo](https://www.npnkorea.com/) is a
 separate static client hosted on Vercel. No Python or R installation is needed
 to call the HTTP API. For the separate R package, see
 [hyein-cbio/NPNkorea](https://github.com/hyein-cbio/NPNkorea).

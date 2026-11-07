@@ -5,7 +5,7 @@ longitude/latitude coordinates.
 
 ## Use the service
 
-- **Web demo:** <https://npnkorea.vercel.app/>
+- **Web demo:** <https://www.npnkorea.com/>
 - **Public HTTP API base URL:** <https://api.npnkorea.com>
 - **[API usage documentation](api/README.md#public-http-api):** endpoints, runnable
   curl examples, input/output rules, errors, and operating limitations

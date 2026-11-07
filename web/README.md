@@ -1,7 +1,7 @@
 # NPNkorea Web
 
 Static web client for the NPNkorea coordinate conversion API. The public demo
-is <https://npnkorea.vercel.app/>. For direct HTTP use, see the
+is <https://www.npnkorea.com/>. For direct HTTP use, see the
 [public API documentation](../api/README.md#public-http-api), including request
 examples, limits, and grid-cell semantics. For the service overview and related
 R package, see the [repository README](../README.md).
@@ -35,7 +35,7 @@ localhost/loopback origins; production CORS allows any origin. Local FastAPI
 ## Vercel deployment
 
 The production project is `hyein-cbio/npnkorea-web`, connected to the `main`
-branch of this repository, at <https://npnkorea.vercel.app/>.
+branch of this repository, at <https://www.npnkorea.com/>.
 
 In Vercel Project Settings → Build and Deployment, set **Root Directory to
 `web`**. This is a project-level setting, not a `vercel.json` option. Do not
@@ -73,11 +73,11 @@ dashboard deployment, promotion, or rollback that does not publish that event
 cannot trigger this workflow; use the manual trigger in that case. This is
 not a polling monitor and it does not automatically roll back a failed check.
 
-The checks always target the public production alias
-`https://npnkorea.vercel.app/`, not the event's potentially protected deployment
-URL. Thus they test what users can access without a Vercel login or bypass
-secret. If deployments overlap, the alias may already point at a newer
-release; this is a live production check, not a per-deployment certification.
+The checks currently target the public Vercel production alias
+`https://npnkorea.vercel.app/`, rather than the primary demo domain
+`https://www.npnkorea.com/` or the event's potentially protected deployment URL.
+Thus they test what users can access without a Vercel login or bypass secret.
+If deployments overlap, the alias may already point at a newer release; this is a live production check, not a per-deployment certification.
 The event's commit and deployment URL are logged for context. Test tooling is
 checked out from the default branch, rather than executing an arbitrary
 deployment ref.
@@ -97,10 +97,10 @@ python3 -B scripts/smoke_web.py
 For a quick manual check from any directory, use:
 
 ```bash
-curl --fail --show-error --silent https://npnkorea.vercel.app/
-curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/app.js
-curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/styles.css
-curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/vendor/leaflet/leaflet.js
+curl --fail --show-error --silent https://www.npnkorea.com/
+curl --fail --show-error --silent -o /dev/null https://www.npnkorea.com/app.js
+curl --fail --show-error --silent -o /dev/null https://www.npnkorea.com/styles.css
+curl --fail --show-error --silent -o /dev/null https://www.npnkorea.com/vendor/leaflet/leaflet.js
 curl --fail --show-error --silent https://api.npnkorea.com/health
 ```
 
