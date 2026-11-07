@@ -1,0 +1,40 @@
+name: Production smoke test
+
+# No push, pull_request, or schedule triggers: Vercel reports the deployment.
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Use trusted default-branch tooling even for deployments of another ref.
+      - name: Check out smoke-test tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Log triggering deployment
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DEPLOYMENT_SHA: ${{ github.event.deployment.sha }}
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url }}
+        run: |
+          printf 'Event: %s\nDeployment commit: %s\nDeployment URL: %s\n' \
+            "$EVENT_NAME" "$DEPLOYMENT_SHA" "$DEPLOYMENT_URL"
+
+      - name: Test smoke-test failure detection
+        run: python3 -m unittest discover -s scripts/tests -v
+
+      - name: Check public production site and API
+        run: python3 scripts/smoke_web.py

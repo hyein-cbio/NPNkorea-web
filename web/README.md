@@ -36,7 +36,47 @@ automatically when the setting changes.
 ### Post-deployment checks
 
 A Vercel Ready status does not guarantee that `/` serves the application.
-From any directory, check the public URL without Vercel authentication:
+The **Production smoke test** GitHub Actions workflow
+([`.github/workflows/production-smoke.yml`](../.github/workflows/production-smoke.yml))
+has only two triggers:
+
+- `deployment_status`: the test job runs only when `state` is `success` and
+  the deployment environment is exactly `Production`.
+- `workflow_dispatch`: run it manually from Actions → Production smoke test →
+  Run workflow, or `gh workflow run production-smoke.yml --ref main`.
+
+There are no push, pull-request, or scheduled triggers. Preview and failed
+or pending deployments do not run the test job. GitHub may still show a
+skipped workflow run for those status events.
+
+The trigger does not distinguish automatic from manual deployments: both
+qualify **if they publish the matching GitHub deployment status**. A CLI or
+dashboard deployment, promotion, or rollback that does not publish that event
+cannot trigger this workflow; use the manual trigger in that case. This is
+not a polling monitor and it does not automatically roll back a failed check.
+
+The checks always target the public production alias
+`https://npnkorea.vercel.app/`, not the event's potentially protected deployment
+URL. Thus they test what users can access without a Vercel login or bypass
+secret. If deployments overlap, the alias may already point at a newer
+release; this is a live production check, not a per-deployment certification.
+The event's commit and deployment URL are logged for context. Test tooling is
+checked out from the default branch, rather than executing an arbitrary
+deployment ref.
+
+The Python standard-library smoke test checks the page identity and controls,
+required JS/CSS responses and content types, the default API configured in the
+**deployed** `app.js`, API health, CORS preflight, and coordinate/code conversion.
+It is an HTTP smoke test, not a browser rendering or JavaScript execution test.
+No additional secrets or Python packages are required. Run the same checks
+locally from the repository root:
+
+```bash
+python3 -B -m unittest discover -s scripts/tests -v
+python3 -B scripts/smoke_web.py
+```
+
+For a quick manual check from any directory, use:
 
 ```bash
 curl --fail --show-error --silent https://npnkorea.vercel.app/
