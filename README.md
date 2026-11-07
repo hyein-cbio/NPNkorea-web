@@ -1,38 +1,43 @@
 # NPNkorea
 
-NPN coordinate conversion service and web client.
+Convert between Korea's National Point Numbers (NPN, 국가지점번호) and WGS84
+longitude/latitude coordinates.
 
-## Repository layout
+## Use the service
 
-- [`api/`](api/) — Python package, FastAPI local API, and AWS Lambda/SAM deployment
-- [`web/`](web/) — static browser client for Vercel
+- **Web demo:** <https://npnkorea.vercel.app/>
+- **Public HTTP API base URL:** <https://api.npnkorea.com>
+- **[API usage documentation](api/README.md#public-http-api):** endpoints, runnable
+  curl examples, input/output rules, errors, and operating limitations
+- **Related R package (separate repository):** <https://github.com/hyein-cbio/NPNkorea>
 
-The API and web client are separate applications in one monorepo. They can be
-developed and deployed independently.
-
-## API
-
-```bash
-cd api
-pixi run -m ~/pixi/work0/pixi.toml python -m pytest -q
-sam build --use-container
-sam deploy --guided
-```
-
-The API exposes `GET /health`, `POST /convert`, `POST /to-npn`, and `POST /to-wgs`. The web client uses `/convert` to complete each interaction in one request.
-
-## Web
+The public API currently accepts requests without an API key or authentication.
+For example:
 
 ```bash
-cd web
-python3 -m http.server 3000
+curl --fail --show-error --silent \
+  https://api.npnkorea.com/health
 ```
 
-For Vercel, set the project **Root Directory to `web`** (not the repository
-root). [`web/vercel.json`](web/vercel.json) configures a static deployment with
-no install or build step and output directory `.`. The API stays on AWS; it
-should not be built as Vercel Functions.
+Response: `{"status":"ok"}`. See the API documentation for conversion examples;
+public access is not a promise of unlimited use or an SLA.
 
-See [`web/README.md`](web/README.md#vercel-deployment) for deployment settings
-and post-deployment checks. Set the deployed API URL in the page settings or
-update `DEFAULT_API_URL` in `web/app.js`.
+## Architecture and repository layout
+
+```text
+Browser → Vercel static web client → AWS API Gateway HTTP API
+                                  → AWS Lambda (Python, eu-west-2)
+```
+
+- [`api/`](api/) — Python conversion package, production Lambda handler, AWS SAM
+  template, optional local FastAPI server, and API tests. Production endpoints
+  are `GET /health`, `POST /convert`, `POST /to-npn`, and `POST /to-wgs`.
+- [`web/`](web/) — static browser client. It uses `/convert` to retrieve a code
+  and its grid-cell corner in one request. Vercel serves the client, not the API.
+- [`scripts/`](scripts/) — production HTTP smoke test and its unit tests.
+
+The API and web client can be developed and deployed independently. See
+[`api/README.md`](api/README.md#python-package-and-local-development) for Python,
+local server, tests, and Lambda deployment instructions, and
+[`web/README.md`](web/README.md) for local web development and Vercel settings.
+For Vercel, the project Root Directory must be `web`, not the repository root.

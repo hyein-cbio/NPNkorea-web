@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "https://or8wc0p8nf.execute-api.eu-west-2.amazonaws.com";
+const DEFAULT_API_URL = "https://api.npnkorea.com";
 const DEFAULT_POINT = { lon: 126.978422, lat: 37.566742 };
 
 const elements = {

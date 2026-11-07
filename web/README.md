@@ -1,18 +1,36 @@
 # NPNkorea Web
 
-Static web client for the NPNkorea coordinate conversion API.
+Static web client for the NPNkorea coordinate conversion API. The public demo
+is <https://npnkorea.vercel.app/>. For direct HTTP use, see the
+[public API documentation](../api/README.md#public-http-api), including request
+examples, limits, and grid-cell semantics. For the service overview and related
+R package, see the [repository README](../README.md).
+
+Vercel serves only the static client; conversion requests go directly from the
+browser to API Gateway HTTP API → AWS Lambda (Python, `eu-west-2`). The client
+uses `POST /convert` to retrieve an NPN code and its cell corner together.
 
 ## Local development
 
+From the repository root:
+
 ```bash
+cd web
 python3 -m http.server 3000
 ```
 
 Open <http://127.0.0.1:3000>.
 
-The API URL can be changed from the settings control in the page. The default
-is the deployed AWS API:
-`https://or8wc0p8nf.execute-api.eu-west-2.amazonaws.com`.
+The default API is `https://api.npnkorea.com`. The page settings provide an
+optional API URL override for local development or other deployments. A saved
+override takes precedence over the default and is remembered in that browser;
+updating the default does not replace an existing setting.
+
+For a local backend, follow the
+[FastAPI setup](../api/README.md#local-fastapi-server-not-production-lambda)
+and set the page's API URL to `http://127.0.0.1:8000`. Local CORS allows only
+localhost/loopback origins; production CORS allows any origin. Local FastAPI
+`/docs` and `/openapi.json` are not available on the production Lambda API.
 
 ## Vercel deployment
 
@@ -83,7 +101,7 @@ curl --fail --show-error --silent https://npnkorea.vercel.app/
 curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/app.js
 curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/styles.css
 curl --fail --show-error --silent -o /dev/null https://npnkorea.vercel.app/vendor/leaflet/leaflet.js
-curl --fail --show-error --silent https://or8wc0p8nf.execute-api.eu-west-2.amazonaws.com/health
+curl --fail --show-error --silent https://api.npnkorea.com/health
 ```
 
 The first response must be the NPNkorea HTML page, not a login or error page;

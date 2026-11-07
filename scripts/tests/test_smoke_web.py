@@ -3,6 +3,7 @@ import io
 import json
 import unittest
 from email.message import Message
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -64,6 +65,19 @@ class PageTests(unittest.TestCase):
         for page in pages:
             with self.subTest(page=page[:70]), self.assertRaises(ValueError):
                 smoke.check_page(page)
+
+    def test_public_api_defaults_use_custom_domain(self):
+        self.assertEqual(API_URL, "https://api.npnkorea.com")
+        input_values = []
+
+        class APIInputParser(HTMLParser):
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == "input" and attrs.get("id") == "base-url":
+                    input_values.append(attrs.get("value"))
+
+        APIInputParser().feed(HTML)
+        self.assertEqual(input_values, [API_URL])
 
     def test_deployed_api_url(self):
         self.assertEqual(smoke.default_api_url(APP_JS.decode()), API_URL)
