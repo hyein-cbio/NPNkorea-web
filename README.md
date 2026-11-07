@@ -28,6 +28,11 @@ cd web
 python3 -m http.server 3000
 ```
 
-For Vercel, set the project Root Directory to `web`. No build command is
-required; the static output directory is `.`. Set the deployed API URL in the
-page settings or update `DEFAULT_API_URL` in `web/app.js`.
+For Vercel, set the project **Root Directory to `web`** (not the repository
+root). [`web/vercel.json`](web/vercel.json) configures a static deployment with
+no install or build step and output directory `.`. The API stays on AWS; it
+should not be built as Vercel Functions.
+
+See [`web/README.md`](web/README.md#vercel-deployment) for deployment settings
+and post-deployment checks. Set the deployed API URL in the page settings or
+update `DEFAULT_API_URL` in `web/app.js`.
