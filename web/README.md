@@ -73,18 +73,20 @@ dashboard deployment, promotion, or rollback that does not publish that event
 cannot trigger this workflow; use the manual trigger in that case. This is
 not a polling monitor and it does not automatically roll back a failed check.
 
-The checks currently target the public Vercel production alias
-`https://npnkorea.vercel.app/`, rather than the primary demo domain
-`https://www.npnkorea.com/` or the event's potentially protected deployment URL.
-Thus they test what users can access without a Vercel login or bypass secret.
-If deployments overlap, the alias may already point at a newer release; this is a live production check, not a per-deployment certification.
+The checks target both public production URLs, `https://npnkorea.vercel.app/`
+and `https://www.npnkorea.com/`, without a Vercel login or bypass secret. If
+deployments overlap, either URL may already serve a newer release than the
+deployment that triggered the live check.
 The event's commit and deployment URL are logged for context. Test tooling is
 checked out from the default branch, rather than executing an arbitrary
 deployment ref.
 
 The Python standard-library smoke test checks the page identity and controls,
-required JS/CSS responses and content types, the default API configured in the
-**deployed** `app.js`, API health, CORS preflight, and coordinate/code conversion.
+required JS/CSS responses and content types, and the default API configured in
+each **deployed** `app.js`. The primary demo must point to
+`https://api.npnkorea.com`. API health, CORS preflight, and both conversion
+directions are checked with each site's own origin. A failure on either URL
+fails the run, and both URLs are attempted.
 It is an HTTP smoke test, not a browser rendering or JavaScript execution test.
 No additional secrets or Python packages are required. Run the same checks
 locally from the repository root:

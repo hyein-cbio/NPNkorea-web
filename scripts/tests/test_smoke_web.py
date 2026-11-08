@@ -131,12 +131,13 @@ class RequestTests(unittest.TestCase):
 class SiteTests(unittest.TestCase):
     def serve(self, req, timeout):
         url = req.full_url
-        if url == smoke.SITE_URL:
-            return Response(url, HTML.encode(), headers("text/html"))
-        if url.startswith(smoke.SITE_URL):
-            path = url.removeprefix(smoke.SITE_URL)
-            body = APP_JS if path == "app.js" else b"/* asset */"
-            return Response(url, body, headers(sorted(smoke.ASSETS[path])[0]))
+        for site_url in (smoke.SITE_URL, smoke.OFFICIAL_SITE_URL):
+            if url == site_url:
+                return Response(url, HTML.encode(), headers("text/html"))
+            if url.startswith(site_url):
+                path = url.removeprefix(site_url)
+                body = APP_JS if path == "app.js" else b"/* asset */"
+                return Response(url, body, headers(sorted(smoke.ASSETS[path])[0]))
         if url == API_URL + "/health":
             return Response(url, b'{"status":"ok"}', headers())
         if url == API_URL + "/convert":
@@ -159,6 +160,52 @@ class SiteTests(unittest.TestCase):
             {"point": smoke.POINT, "output": "han"},
             {"code": smoke.EXPECTED_CODE, "output": "han"},
         ])
+
+    def test_main_checks_both_sites_and_uses_each_origin_for_all_api_requests(self):
+        with patch.object(smoke, "urlopen", side_effect=self.serve) as opened, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(smoke.main(), 0)
+        requests = [call.args[0] for call in opened.call_args_list]
+        self.assertEqual([req.full_url for req in requests if not req.full_url.startswith(API_URL)], [
+            site_url + path
+            for site_url in (smoke.SITE_URL, smoke.OFFICIAL_SITE_URL)
+            for path in ("", *smoke.ASSETS)
+        ])
+        self.assertEqual([
+            (req.full_url, req.get_method(), req.get_header("Origin"))
+            for req in requests if req.full_url.startswith(API_URL)
+        ], [
+            (API_URL + path, method, site_url.rstrip("/"))
+            for site_url in (smoke.SITE_URL, smoke.OFFICIAL_SITE_URL)
+            for path, method in (("/health", "GET"), ("/convert", "OPTIONS"),
+                                 ("/convert", "POST"), ("/convert", "POST"))
+        ])
+
+    def test_official_site_rejects_wrong_deployed_api(self):
+        def serve(req, timeout):
+            if req.full_url == smoke.OFFICIAL_SITE_URL + "app.js":
+                body = APP_JS.replace(API_URL.encode(), b"https://other.example")
+                return Response(req.full_url, body, headers("application/javascript"))
+            return self.serve(req, timeout)
+
+        with patch.object(smoke, "urlopen", side_effect=serve), contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError, "Deployed DEFAULT_API_URL must be"):
+                smoke.check_site(smoke.OFFICIAL_SITE_URL, expected_api_url=smoke.OFFICIAL_API_URL)
+        self.assertEqual(self.payloads, [])
+
+    def test_main_still_checks_the_other_site_when_either_site_fails(self):
+        for failed_site in (smoke.SITE_URL, smoke.OFFICIAL_SITE_URL):
+            def serve(req, timeout):
+                if req.full_url == failed_site:
+                    return Response(req.full_url, b"<title>Login</title>", headers("text/html"))
+                return self.serve(req, timeout)
+
+            with self.subTest(site=failed_site):
+                self.payloads.clear()
+                stderr = io.StringIO()
+                with patch.object(smoke, "urlopen", side_effect=serve), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                    self.assertEqual(smoke.main(), 1)
+                self.assertIn(f"FAIL {failed_site}", stderr.getvalue())
+                self.assertEqual(len(self.payloads), 2)
 
     def test_bad_health_cors_json_asset_and_conversion_fail(self):
         cases = [

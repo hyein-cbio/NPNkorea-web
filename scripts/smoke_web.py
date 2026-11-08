@@ -1,4 +1,4 @@
-"""Check the public production site and its deployed default API using only stdlib."""
+"""Check both public production site URLs and their deployed API using only stdlib."""
 
 import json
 import math
@@ -10,6 +10,8 @@ from urllib.request import Request, urlopen
 
 
 SITE_URL = "https://npnkorea.vercel.app/"
+OFFICIAL_SITE_URL = "https://www.npnkorea.com/"
+OFFICIAL_API_URL = "https://api.npnkorea.com"
 ASSETS = {
     "styles.css": {"text/css"},
     "vendor/leaflet/leaflet.css": {"text/css"},
@@ -114,7 +116,7 @@ def check_conversion(result):
         )
 
 
-def check_site(site_url=SITE_URL):
+def check_site(site_url=SITE_URL, *, expected_api_url=None):
     body, _ = request(site_url, media_types={"text/html"})
     check_page(body.decode("utf-8"))
     print(f"PASS homepage: {site_url}", flush=True)
@@ -123,8 +125,9 @@ def check_site(site_url=SITE_URL):
         assets[path], _ = request(urljoin(site_url, path), media_types=media_types)
         print(f"PASS asset: {path}", flush=True)
 
-    # Use the API configured in the deployed JS, not a separate stale CI setting.
     api_url = default_api_url(assets["app.js"].decode("utf-8"))
+    if expected_api_url is not None:
+        require(api_url == expected_api_url, f"Deployed DEFAULT_API_URL must be {expected_api_url}")
     parsed_site = urlsplit(site_url)
     origin = f"{parsed_site.scheme}://{parsed_site.netloc}"
     health = api_json(api_url, "/health", origin=origin)
@@ -141,7 +144,7 @@ def check_site(site_url=SITE_URL):
     allowed_headers = {value.strip().lower() for value in headers.get("Access-Control-Allow-Headers", "").split(",")}
     require("POST" in methods, "CORS preflight does not allow POST")
     require("content-type" in allowed_headers or "*" in allowed_headers, "CORS preflight does not allow Content-Type")
-    print("PASS API CORS preflight", flush=True)
+    print(f"PASS API CORS preflight: {origin}", flush=True)
 
     for payload in ({"point": POINT, "output": "han"}, {"code": EXPECTED_CODE, "output": "han"}):
         check_conversion(api_json(api_url, "/convert", origin=origin, payload=payload))
@@ -149,12 +152,14 @@ def check_site(site_url=SITE_URL):
 
 
 def main():
-    try:
-        check_site()
-    except (OSError, ValueError) as error:
-        print(f"FAIL: {error}", file=sys.stderr)
-        return 1
-    return 0
+    exit_code = 0
+    for site_url, expected_api_url in ((SITE_URL, None), (OFFICIAL_SITE_URL, OFFICIAL_API_URL)):
+        try:
+            check_site(site_url, expected_api_url=expected_api_url)
+        except (OSError, ValueError) as error:
+            print(f"FAIL {site_url}: {error}", file=sys.stderr)
+            exit_code = 1
+    return exit_code
 
 
 if __name__ == "__main__":
