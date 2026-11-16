@@ -56,7 +56,7 @@ input:focus-visible {
 
 .app-shell {
   display: grid;
-  grid-template-rows: var(--command-height) auto minmax(180px, 1fr) var(--dock-height);
+  grid-template-rows: var(--command-height) minmax(180px, 1fr) var(--dock-height);
   width: 100%;
   height: 100dvh;
   min-height: 620px;
@@ -300,25 +300,6 @@ input:focus-visible {
   color: white;
   font-weight: 600;
   cursor: pointer;
-}
-
-.service-intro {
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-muted);
-}
-
-.service-intro h1 {
-  margin: 0 0 4px;
-  font-size: 18px;
-  line-height: 1.5;
-}
-
-.service-intro p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
 }
 
 .map-stage {
@@ -678,14 +659,6 @@ input:focus-visible {
 
   .app-shell {
     min-height: 660px;
-  }
-
-  .service-intro {
-    padding: 10px 12px;
-  }
-
-  .service-intro h1 {
-    font-size: 16px;
   }
 
   .command-bar {
