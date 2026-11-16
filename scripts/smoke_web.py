@@ -66,7 +66,8 @@ class Page(HTMLParser):
 
 
 def check_page(html):
-    require("<title>NPNkorea Map</title>" in html, "Homepage is not the NPNkorea page")
+    require("<title>국가지점번호 조회·위경도 변환 지도 | NPNkorea</title>" in html,
+            "Homepage is not the NPNkorea page")
     page = Page()
     page.feed(html)
     require({"map", "command-form", "result-code"} <= page.ids, "Homepage is missing app controls")
